@@ -27,4 +27,4 @@ def mse_loss(output, target):
     torch.Tensor
         A scalar tensor representing the computed MSE loss.
     """
-    return (abs(output - target)**2).sum(dim=1).mean(dim=0)
+    return 0.5 * (abs(output - target) ** 2).sum(dim=1).mean(dim=0)

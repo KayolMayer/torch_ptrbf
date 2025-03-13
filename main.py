@@ -62,19 +62,19 @@ def test(dataset, model, loss_fn, device):
             test_loss += loss_fn(pred, y).item()
             error += sum(sum(abs(y-pred))).item()
 
-            #plt.scatter(pred[:,2,0].real,pred[:,2,0].imag)
     test_loss /= num_batches
     error /= (size*num_batches)
+    #plt.scatter(pred[:,2,0].real,pred[:,2,0].imag)
     print(f"Test Error: {error:>8f}, Avg loss: {test_loss:>8f} \n")
 
 
-batch_size = 10
+batch_size = 100
 len_data   = 1e5
 epochs     = 100
 
 # Create data loaders
 train_dataloader = beamforming_dataset_loader(len_data=len_data, batch_size=batch_size, shuffle=True)
-test_dataloader  = beamforming_dataset_loader(len_data=len_data/100, batch_size=100)
+test_dataloader  = beamforming_dataset_loader(len_data=len_data, batch_size=batch_size)
 
 # Get device for training
 #device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
@@ -89,7 +89,7 @@ ptrbf = ptrbf_nn(inputs, neurons, outputs).to(device)
 print(ptrbf)
 
 loss_fn = mse_loss
-optimizer = torch.optim.Adam(ptrbf.parameters(), lr=1e-4)
+optimizer = torch.optim.Adam(ptrbf.parameters(), lr=3e-3)
 
 
 for t in range(epochs):

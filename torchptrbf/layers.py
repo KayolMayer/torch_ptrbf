@@ -71,7 +71,7 @@ class vanilla(nn.Module):
         G = (G - mean(G, dim=-1, keepdim=True)) / sqrt(var(G, dim=-1,
                                                            keepdim=True))
 
-        self.G = nn.Parameter(G*sqrt(tensor([inputs])))
+        self.G = nn.Parameter(G/sqrt(tensor([inputs])))
         self.s = nn.Parameter(ones(neurons, 1) + 1j * ones(neurons, 1))
         self.W = nn.Parameter(W*sqrt(5 * exp(tensor([2])) * inputs /
                                      (12 * neurons * outputs)))
@@ -96,9 +96,9 @@ class vanilla(nn.Module):
             Output tensor of shape (batch_size, outputs, 1), containing
             complex-valued predictions.
         """
-        v_real = ((self.G.real * x.real.transpose(1, 2)) ** 2).\
+        v_real = ((x.real.transpose(1, 2) - self.G.real) ** 2).\
             sum(dim=2, keepdim=True)
-        v_imag = ((self.G.imag * x.imag.transpose(1, 2)) ** 2).\
+        v_imag = ((x.imag.transpose(1, 2) - self.G.imag) ** 2).\
             sum(dim=2, keepdim=True)
 
         phi = exp(- v_real / self.s.real) + 1j * exp(- v_imag / self.s.imag)
