@@ -62,20 +62,18 @@ class vanilla(nn.Module):
         super().__init__()
 
         # Create the sinaptic weight matrix with zero mean and unitary variance
-        W = randn(outputs, neurons, dtype=cfloat)
-        W = (W - mean(W, dim=-1, keepdim=True)) / sqrt(var(W, dim=-1,
-                                                           keepdim=True))
+        W = randn(neurons, outputs, dtype=cfloat)
+        W = (W-mean(W, dim=0, keepdim=True))/sqrt(var(W, dim=0, keepdim=True))
 
         # Create the center vector matrix with zero mean and unitary variance
-        G = randn(neurons, inputs, dtype=cfloat)
-        G = (G - mean(G, dim=-1, keepdim=True)) / sqrt(var(G, dim=-1,
-                                                           keepdim=True))
+        G = randn(inputs, neurons, dtype=cfloat)
+        G = (G-mean(G, dim=0, keepdim=True))/sqrt(var(G, dim=0, keepdim=True))
 
         self.G = nn.Parameter(G/sqrt(tensor([inputs])))
-        self.s = nn.Parameter(ones(neurons, 1) + 1j * ones(neurons, 1))
+        self.s = nn.Parameter(ones(1, neurons) + 1j * ones(1, neurons))
         self.W = nn.Parameter(W*sqrt(5 * exp(tensor([2])) * inputs /
                                      (12 * neurons * outputs)))
-        self.b = nn.Parameter(zeros(outputs, 1, dtype=cfloat))
+        self.b = nn.Parameter(zeros(1, outputs, dtype=cfloat))
 
     def forward(self, x):
         """
@@ -96,13 +94,11 @@ class vanilla(nn.Module):
             Output tensor of shape (batch_size, outputs, 1), containing
             complex-valued predictions.
         """
-        v_real = ((x.real.transpose(1, 2) - self.G.real) ** 2).\
-            sum(dim=2, keepdim=True)
-        v_imag = ((x.imag.transpose(1, 2) - self.G.imag) ** 2).\
-            sum(dim=2, keepdim=True)
+        v_real = ((x.real - self.G.real) ** 2).sum(dim=1, keepdim=True)
+        v_imag = ((x.imag - self.G.imag) ** 2).sum(dim=1, keepdim=True)
 
         phi = exp(- v_real / self.s.real) + 1j * exp(- v_imag / self.s.imag)
 
-        y = self.W @ phi + self.b
+        y = phi @ self.W + self.b
 
         return y

@@ -7,7 +7,7 @@ Created on Wed Mar 12 16:27:24 2025.
 from torch import abs
 
 
-def mse_loss(output, target):
+def mse_loss(target, output):
     """
     Compute the Mean Squared Error (MSE) loss between the output and target.
 
@@ -27,4 +27,4 @@ def mse_loss(output, target):
     torch.Tensor
         A scalar tensor representing the computed MSE loss.
     """
-    return 0.5 * (abs(output - target) ** 2).sum(dim=1).mean(dim=0)
+    return 0.5 * (abs(target - output) ** 2).sum(dim=2).mean(dim=0)

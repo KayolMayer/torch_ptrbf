@@ -17,14 +17,14 @@ class beamforming_dataset(Dataset):
 
         input_data, output_data = dataset_beamforming_gen(len_data=len_data)
 
-        input_data = (input_data - mean(input_data, dim=0, keepdim=True)) / \
-        sqrt(var(input_data, dim=-1, keepdim=True)) / sqrt(tensor(input_data.shape[1]))
+        input_data = (input_data - mean(input_data, dim=1, keepdim=True)) / \
+        sqrt(var(input_data, dim=1, keepdim=True)) / sqrt(tensor(input_data.shape[0]))
 
-        output_data = (output_data - mean(output_data, dim=0, keepdim=True)) / \
-        sqrt(var(output_data, dim=-1, keepdim=True)) / sqrt(tensor(output_data.shape[1]))
+        output_data = (output_data - mean(output_data, dim=1, keepdim=True)) / \
+        sqrt(var(output_data, dim=1, keepdim=True)) / sqrt(tensor(output_data.shape[0]))
 
-        self.input_ids = [input_data[ii].reshape((-1,1)) for ii in range(int(len_data))]
-        self.target_ids = [output_data[ii].reshape((-1,1)) for ii in range(int(len_data))]
+        self.input_ids = [input_data[:,ii].unsqueeze_(1) for ii in range(int(len_data))]
+        self.target_ids = [output_data[:,ii].unsqueeze_(0) for ii in range(int(len_data))]
 
     def __len__(self):
         return len(self.input_ids)
@@ -229,4 +229,4 @@ def dataset_beamforming_gen(len_data=1e4):
     indices_true = np.where(desired)
     SetOut = SetOut[indices_true]
 
-    return from_numpy(SetIn.T).to(cfloat), from_numpy(SetOut.T).to(cfloat)
+    return from_numpy(SetIn).to(cfloat), from_numpy(SetOut).to(cfloat)

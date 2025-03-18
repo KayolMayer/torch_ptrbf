@@ -10,6 +10,8 @@ from torchptrbf.layers   import vanilla
 from torchptrbf.loss     import mse_loss
 from torchptrbf.datasets import beamforming_dataset_loader
 
+from torch import sum
+
 import matplotlib.pyplot as plt
 
 
@@ -39,7 +41,7 @@ def train(dataset, model, loss_fn, optimizer, device):
 
         # Compute prediction error
         pred = model(X)
-        loss = loss_fn(pred, y)
+        loss = loss_fn(y, pred)
 
         # Backpropagation
         loss.backward()
@@ -59,8 +61,8 @@ def test(dataset, model, loss_fn, device):
         for X, y in dataset:
             X, y = X.to(device), y.to(device)
             pred = model(X)
-            test_loss += loss_fn(pred, y).item()
-            error += sum(sum(abs(y-pred))).item()
+            test_loss += loss_fn(y, pred).item()
+            error += sum(sum(abs(y - pred))).item()
 
     test_loss /= num_batches
     error /= (size*num_batches)
@@ -68,9 +70,9 @@ def test(dataset, model, loss_fn, device):
     print(f"Test Error: {error:>8f}, Avg loss: {test_loss:>8f} \n")
 
 
-batch_size = 100
-len_data   = 1e5
-epochs     = 100
+batch_size = 1
+len_data   = 1e4
+epochs     = 20
 
 # Create data loaders
 train_dataloader = beamforming_dataset_loader(len_data=len_data, batch_size=batch_size, shuffle=True)
@@ -89,7 +91,7 @@ ptrbf = ptrbf_nn(inputs, neurons, outputs).to(device)
 print(ptrbf)
 
 loss_fn = mse_loss
-optimizer = torch.optim.Adam(ptrbf.parameters(), lr=3e-3)
+optimizer = torch.optim.SGD(ptrbf.parameters(), lr=3e-3)
 
 
 for t in range(epochs):
