@@ -20,7 +20,7 @@ def mse_loss(target, output):
         The predicted values, expected to be a complex-valued tensor.
     target : torch.Tensor
         The ground truth values, expected to be a complex-valued tensor of the
-        same shape as `output`.
+        same shape as 'output'.
 
     Returns
     -------
@@ -30,12 +30,12 @@ def mse_loss(target, output):
     return 0.5 * (abs(target - output) ** 2).sum(dim=2).mean(dim=0)
 
 
-def calc_loss_loader(data_loader, model, device):
+def calc_loss_loader(data_loader, model, loss_func, device):
     """
-    Compute the average cross-entropy loss over multiple batches from a loader.
+    Compute the loss over multiple batches from a loader.
 
-    This function iterates through a specified number of batches from the given
-    data loader, computes the loss for each batch and returns the average loss.
+    This function iterates through all batches from the given data loader,
+    computes the loss for each batch and returns the average loss.
 
     Parameters
     ----------
@@ -43,8 +43,11 @@ def calc_loss_loader(data_loader, model, device):
                                                    batches of input and target
                                                    tensors.
         model (torch.nn.Module): The NN model.
+        loss_func (callable): The loss function that computes the error between
+                              predictions and targets.
         device (torch.device): The device (CPU or GPU) on which to perform
                                computations.
+
     Returns
     -------
         float: The average loss.
@@ -54,9 +57,6 @@ def calc_loss_loader(data_loader, model, device):
     if len(data_loader) == 0:
         return float("nan")
     else:
-        # Reduce the number of batches to match the total number of batches in
-        # the data loader
-        # if num_batches exceeds the number of batches in the data loader
         num_batches = len(data_loader)
 
     for i, (input_batch, target_batch) in enumerate(data_loader):
@@ -68,7 +68,7 @@ def calc_loss_loader(data_loader, model, device):
         # Compute prediction error
         pred = model(input_batch)
 
-        loss = mse_loss(target_batch, pred)
+        loss = loss_func(target_batch, pred)
         total_loss += loss.item()
 
     return total_loss / num_batches

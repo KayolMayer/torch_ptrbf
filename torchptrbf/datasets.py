@@ -10,6 +10,29 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class beamforming_dataset(Dataset):
+    """
+    A PyTorch Dataset for beamforming data, used for training CVNNs.
+
+    This dataset generates input-output beamforming data, normalizes it,
+    and stores it in a format suitable for training machine learning models.
+
+    Attributes
+    ----------
+        input_ids (list of torch.Tensor): List of input feature tensors.
+        target_ids (list of torch.Tensor): List of target output tensors.
+
+    Parameters
+    ----------
+        len_data (int, optional): The number of samples to generate.
+                                  Default is 10,000.
+
+    Methods
+    -------
+        __len__():
+            Returns the number of samples in the dataset.
+        __getitem__(idx):
+            Retrieves the input-target pair at the specified index.
+    """
 
     def __init__(self, len_data=1e4):
         self.input_ids = []
@@ -17,25 +40,70 @@ class beamforming_dataset(Dataset):
 
         input_data, output_data = dataset_beamforming_gen(len_data=len_data)
 
+        # Input normalization
         input_data = (input_data - mean(input_data, dim=1, keepdim=True)) / \
-        sqrt(var(input_data, dim=1, keepdim=True)) / sqrt(tensor(input_data.shape[0]))
+            sqrt(var(input_data, dim=1, keepdim=True)) / \
+            sqrt(tensor(input_data.shape[0]))
 
-        output_data = (output_data - mean(output_data, dim=1, keepdim=True)) / \
-        sqrt(var(output_data, dim=1, keepdim=True)) / sqrt(tensor(output_data.shape[0]))
+        # Output normalization
+        output_data = (output_data - mean(output_data, dim=1, keepdim=True)) /\
+            sqrt(var(output_data, dim=1, keepdim=True)) / \
+            sqrt(tensor(output_data.shape[0]))
 
-        self.input_ids = [input_data[:,ii].unsqueeze_(1) for ii in range(int(len_data))]
-        self.target_ids = [output_data[:,ii].unsqueeze_(0) for ii in range(int(len_data))]
+        self.input_ids = [input_data[:, ii].unsqueeze_(1)
+                          for ii in range(int(len_data))]
+        self.target_ids = [output_data[:, ii].unsqueeze_(0)
+                           for ii in range(int(len_data))]
 
     def __len__(self):
+        """Return the total number of samples in the dataset."""
         return len(self.input_ids)
 
     def __getitem__(self, idx):
+        """
+        Retrieve the input-target pair at the specified index.
+
+        Parameters
+        ----------
+            idx (int): The index of the sample to retrieve.
+
+        Returns
+        -------
+            tuple: A tuple containing:
+                - input_ids[idx] (torch.Tensor): The input feature tensor.
+                - target_ids[idx] (torch.Tensor): The corresponding target
+                                                  tensor.
+        """
         return self.input_ids[idx], self.target_ids[idx]
 
 
 def beamforming_dataset_loader(len_data=1e4, batch_size=1, shuffle=True,
                                drop_last=True, num_workers=0):
+    """
+    Create a PyTorch DataLoader for the beamforming dataset.
 
+    This function initializes a 'beamforming_dataset' instance and
+    loads it into a DataLoader, allowing for efficient batch processing
+    during training or evaluation.
+
+    Parameters
+    ----------
+        len_data (int, optional): The number of samples in the dataset.
+                                  Default is 10,000.
+        batch_size (int, optional): The number of samples per batch.
+                                    Default is 1.
+        shuffle (bool, optional): Whether to shuffle the dataset for epoch.
+                                  Default is True.
+        drop_last (bool, optional): Whether to drop the last batch if it is
+                                    smaller than 'batch_size'. Default is True.
+        num_workers (int, optional): Number of worker processes for data
+                                     loading. Default is 0.
+
+    Returns
+    -------
+        torch.utils.data.DataLoader: A DataLoader object for iterating over
+                                     the dataset.
+    """
     # Create dataset
     dataset = beamforming_dataset(len_data=len_data)
 
@@ -57,16 +125,7 @@ def dataset_beamforming_gen(len_data=1e4):
 
     Parameters
     ----------
-        modulation (list): List of modulation types.
-        Mmod (list): List of modulation orders.
-        f (float): Frequency of the signal.
-        phi (float): Angle in degrees for the transmitter.
-        theta (float): Angle in degrees for the elevation.
-        desired (array): Array indicating if each output is desired or not.
         lenData (int): Length of the dataset.
-        SINRdB (float): Signal-to-Interference-plus-Noise Ratio in dB.
-        SNRdBs (float): Signal-to-Noise Ratio in dB for sources.
-        SNRdBi (float): Signal-to-Noise Ratio in dB for interferences.
 
     Returns
     -------
