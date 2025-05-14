@@ -69,7 +69,7 @@ ptrbf_arc = {
     'neurons': [50, 50],
     'batch': 1,
     'lr': 3e-3,
-    'epochs': 2,
+    'epochs': 10,
     'len_train': 1e4,
     'len_val': 1e3,
     'len_inf': 1e4,
@@ -101,7 +101,7 @@ manual_seed(ptrbf_arc['random_seed'])
 ptrbf = ptrbf_vanilla(ptrbf_arc['inputs'], ptrbf_arc['neurons'],
                       ptrbf_arc['outputs']).to(device)
 
-optimizer = optim.SGD(ptrbf.parameters(), lr=ptrbf_arc['lr'])
+optimizer = optim.Adam(ptrbf.parameters(), lr=ptrbf_arc['lr'])
 
 # Model training
 train_losses, val_losses = train(

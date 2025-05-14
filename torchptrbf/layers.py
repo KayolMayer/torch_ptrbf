@@ -6,6 +6,7 @@ Created on Wed Mar 12 15:07:24 2025.
 """
 
 from torch import nn, tensor, randn, ones, zeros, cfloat, exp, sqrt, mean, var
+from torch import max as max_torch
 
 
 class vanilla(nn.Module):
@@ -39,7 +40,7 @@ class vanilla(nn.Module):
         Number of output features.
     """
 
-    def __init__(self, inputs, neurons, outputs):
+    def __init__(self, inputs, neurons, outputs, eps=1e-5):
         """
         Initialize the Vanilla layer with complex-valued parameters.
 
@@ -60,6 +61,9 @@ class vanilla(nn.Module):
             Number of output features.
         """
         super().__init__()
+
+        # Initialize the variance limitaion of the Gaussian Neurons
+        self.eps = tensor(eps)
 
         # Create the sinaptic weight matrix with zero mean and unitary variance
         W = randn(neurons, outputs, dtype=cfloat)
@@ -97,7 +101,8 @@ class vanilla(nn.Module):
         v_real = ((x.real - self.G.real) ** 2).sum(dim=1, keepdim=True)
         v_imag = ((x.imag - self.G.imag) ** 2).sum(dim=1, keepdim=True)
 
-        phi = exp(- v_real / self.s.real) + 1j * exp(- v_imag / self.s.imag)
+        phi = exp(- v_real / max_torch(self.s.real, self.eps)) +\
+            1j * exp(- v_imag / max_torch(self.s.imag, self.eps))
 
         y = phi @ self.W + self.b
 
