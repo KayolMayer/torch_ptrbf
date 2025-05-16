@@ -59,6 +59,8 @@ class vanilla(nn.Module):
             Number of neurons in the hidden layer.
         outputs : int
             Number of output features.
+        eps :float
+            Minimum center variance value to avoid gradient explosion.
         """
         super().__init__()
 
